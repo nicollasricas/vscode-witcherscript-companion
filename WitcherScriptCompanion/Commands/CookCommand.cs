@@ -43,7 +43,10 @@ namespace WitcherScriptCompanion.Commands
 
             Metadata();
 
-            CopyScripts();
+            if (HasScripts())
+            {
+                CopyScripts();
+            }
         }
 
         public override bool OnCommandExecuting(string[] args)
@@ -150,7 +153,7 @@ namespace WitcherScriptCompanion.Commands
                 {
                     WorkingDirectory = modKitPath,
                     FileName = "wcc_lite.exe",
-                    Arguments = $"cook -platform=pc -mod={uncookedPath} -basedir={uncookedPath} -outdir={cookedPath}"
+                    Arguments = $"cook -platform=pc -mod=\"{uncookedPath}\" -basedir=\"{uncookedPath}\" -outdir=\"{cookedPath}\""
                 }
             };
 
@@ -160,7 +163,17 @@ namespace WitcherScriptCompanion.Commands
 
         private void CopyScripts()
         {
+            foreach (var scriptPath in Directory.EnumerateFiles(scriptsPath, "*.ws", SearchOption.AllDirectories))
+            {
+                var newScriptPath = Path.Combine(outPath, "scripts", scriptPath.Replace(scriptsPath, "").Substring(1));
+
+                Directory.CreateDirectory(Path.GetDirectoryName(newScriptPath));
+
+                File.Copy(scriptPath, newScriptPath, true);
+            }
         }
+
+        private bool HasScripts() => Directory.EnumerateFiles(scriptsPath, "*.ws", SearchOption.AllDirectories).Any();
 
         private bool HasMeshes()
         {
@@ -224,7 +237,7 @@ namespace WitcherScriptCompanion.Commands
                 {
                     WorkingDirectory = modKitPath,
                     FileName = "wcc_lite.exe",
-                    Arguments = $"metadatastore -path={outPath}"
+                    Arguments = $"metadatastore -path=\"{outPath}\""
                 }
             };
 
@@ -241,7 +254,7 @@ namespace WitcherScriptCompanion.Commands
                 {
                     WorkingDirectory = modKitPath,
                     FileName = "wcc_lite.exe",
-                    Arguments = $"pack -dir={contentPath} -outdir={outPath}"
+                    Arguments = $"pack -dir=\"{contentPath}\" -outdir=\"{outPath}\""
                 }
             };
 
@@ -258,7 +271,7 @@ namespace WitcherScriptCompanion.Commands
                 {
                     WorkingDirectory = modKitPath,
                     FileName = "wcc_lite.exe",
-                    Arguments = $"pack -dir={cookedPath} -outdir={outPath}"
+                    Arguments = $"pack -dir=\"{cookedPath}\" -outdir=\"{outPath}\""
                 }
             };
 

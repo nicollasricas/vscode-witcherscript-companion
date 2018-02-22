@@ -9,5 +9,6 @@
         public const string PathNotSelected = "E_PATH_NOT_SELECTED";
         public const string Unexpected = "E_UNEXPECTED";
         public const string ModNotCreated = "E_MOD_NOT_CREATED";
+        public const string UnableToCheckUpdates = "E_UNABLE_TO_CHECK_UPDATES";
     }
 }

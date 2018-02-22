@@ -12,5 +12,7 @@ namespace WitcherScriptCompanion
 
         [JsonProperty(PropertyName = "cook.useLocalDepot")]
         public bool UseLocalDepot { get; set; } = false;
+
+        //public bool SkipErrors { get; set; } = false;
     }
 }

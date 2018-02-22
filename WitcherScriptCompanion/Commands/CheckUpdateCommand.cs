@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Net;
+using System.Reflection;
 
 namespace WitcherScriptCompanion.Commands
 {
@@ -9,7 +11,24 @@ namespace WitcherScriptCompanion.Commands
 
         public override void Execute()
         {
-            Console.Out.Write("WIP");
+            var currentVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
+
+            try
+            {
+                using (var webClient = new WebClient())
+                {
+                    var latestVersion = webClient.DownloadString("https://raw.githubusercontent.com/nicollasricas/vscode-witcherscript-companion/master/update.txt");
+
+                    if (!Equals(currentVersion, latestVersion))
+                    {
+                        Console.Out.Write($"There's a new update available for Witcher Script Companion, latest version: {latestVersion}, download at https://github.com/nicollasricas/vscode-witcherscript-companion/releases");
+                    }
+                }
+            }
+            catch
+            {
+                Console.Error.Write(Errors.UnableToCheckUpdates);
+            }
         }
     }
 }
