@@ -9,8 +9,11 @@ namespace WitcherScriptCompanion.Commands
 {
     public class CookCommand : Command
     {
+        private WitcherPackage witcherPackage;
+
         private readonly string[] meshesExtensions = { ".fbx;", ".re" };
         private readonly string[] texturesExtensions = { ".dds", ".bmp", ".jpg", ".tga", ".png" };
+
         private string contentPath;
         private string cookedPath;
         private string gamePath;
@@ -19,10 +22,10 @@ namespace WitcherScriptCompanion.Commands
         private string scriptsPath;
         private string tempPath;
         private string uncookedPath;
-        private WitcherPackage witcherPackage;
         private string workspacePath;
+        private string modMergerPath;
 
-        public override bool CanExecute(string[] args) => args.Length.Equals(4) && args[0].Equals("--cook");
+        public override bool CanExecute(string[] args) => args.Length > 3 && args[0].Equals("--cook");
 
         public override void Execute()
         {
@@ -47,11 +50,31 @@ namespace WitcherScriptCompanion.Commands
             {
                 CopyScripts();
             }
+
+            ModMerger();
+        }
+
+        public void ModMerger()
+        {
+            if (!string.IsNullOrEmpty(modMergerPath))
+            {
+                var process = new Process()
+                {
+                    StartInfo = new ProcessStartInfo()
+                    {
+                        WorkingDirectory = modMergerPath,
+                        FileName = "WitcherScriptMerger.exe"
+                    }
+                };
+
+                process.Start();
+                process.WaitForExit();
+            }
         }
 
         public override bool OnCommandExecuting(string[] args)
         {
-            // wsc --cook gamePath modKitPath workspacePath
+            // wsc --cook gamePath modKitPath workspacePath modMergerPath
 
             try
             {
@@ -87,22 +110,33 @@ namespace WitcherScriptCompanion.Commands
                 witcherPackage = JsonConvert.DeserializeObject<WitcherPackage>(File.ReadAllText(witcherPackagePath, Encoding.UTF8));
 
                 uncookedPath = Path.Combine(workspacePath, "out", "uncooked");
+
+                CreateOrEraseDirectory(uncookedPath);
+
                 cookedPath = Path.Combine(workspacePath, "out", "cooked");
+
+                CreateOrEraseDirectory(cookedPath);
+
                 tempPath = Path.Combine(workspacePath, "out", "tmp");
 
-                Directory.CreateDirectory(tempPath);
-                Directory.CreateDirectory(uncookedPath);
-                Directory.CreateDirectory(cookedPath);
+                CreateOrEraseDirectory(tempPath);
 
-                outPath = Path.Combine(workspacePath, "out", witcherPackage.Name, "content");
+                outPath = Path.Combine(gamePath, "mods", witcherPackage.Name, "content");
 
-                Directory.CreateDirectory(outPath);
+                CreateOrEraseDirectory(outPath);
 
                 scriptsPath = Path.Combine(workspacePath, witcherPackage.Name, "scripts");
                 contentPath = Path.Combine(workspacePath, witcherPackage.Name, "content");
+
+                if (args.Length == 5 && !string.IsNullOrEmpty(args[4]))
+                {
+                    modMergerPath = args[4];
+                }
             }
-            catch
+            catch (Exception ex)
             {
+                System.Windows.Forms.MessageBox.Show(ex.Message);
+
                 Console.Error.Write(Errors.Unexpected);
 
                 return false;
@@ -111,20 +145,17 @@ namespace WitcherScriptCompanion.Commands
             return true;
         }
 
-        public override void OnExecuted()
+        private void CreateOrEraseDirectory(string path)
         {
-            try
+            if (Directory.Exists(path))
             {
-                Directory.Delete(tempPath, true);
-                Directory.Delete(uncookedPath, true);
-                Directory.Delete(cookedPath, true);
+                Directory.Delete(path, true);
+            }
 
-                System.Diagnostics.Process.Start(outPath);
-            }
-            catch
-            {
-            }
+            Directory.CreateDirectory(path);
         }
+
+        public override void OnExecuted() => CreateOrEraseDirectory(Path.Combine(workspacePath, "out"));
 
         private void BuildCacheTexture()
         {
