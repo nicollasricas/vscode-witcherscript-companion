@@ -19,7 +19,7 @@ namespace WitcherScriptCompanion.Commands
                 {
                     var latestVersion = webClient.DownloadString("https://raw.githubusercontent.com/nicollasricas/vscode-witcherscript-companion/master/update.txt");
 
-                    if (!Equals(currentVersion, latestVersion))
+                    if (!currentVersion.Trim().Equals(latestVersion.Trim()))
                     {
                         Console.Out.Write($"There's a new update available for Witcher Script Companion, latest version: {latestVersion}, download at https://github.com/nicollasricas/vscode-witcherscript-companion/releases");
                     }
