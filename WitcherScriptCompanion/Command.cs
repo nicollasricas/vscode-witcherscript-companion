@@ -1,7 +1,12 @@
-﻿namespace WitcherScriptCompanion
+﻿using System;
+using Newtonsoft.Json;
+
+namespace WitcherScriptCompanion
 {
     public abstract class Command
     {
+        public abstract string Name { get; }
+
         public static bool Execute(Command command, string[] args)
         {
             if (!command.CanExecute(args))
@@ -9,7 +14,7 @@
                 return false;
             }
 
-            if (!command.OnCommandExecuting(args))
+            if (!command.OnExecuting(args))
             {
                 return true;
             }
@@ -29,6 +34,8 @@
         {
         }
 
-        public virtual bool OnCommandExecuting(string[] args) => true;
+        public void SendEvent(Event @event) => Console.Out.WriteLine(JsonConvert.SerializeObject(@event));
+
+        public virtual bool OnExecuting(string[] args) => true;
     }
 }

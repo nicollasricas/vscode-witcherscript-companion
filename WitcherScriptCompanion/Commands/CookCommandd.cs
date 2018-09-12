@@ -1,14 +1,16 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using Newtonsoft.Json;
 
 namespace WitcherScriptCompanion.Commands
 {
-    public class CookCommand : Command
+    public class CookCommandd : Command
     {
+        public override string Name => "--cook";
+
         private WitcherPackage witcherPackage;
 
         private readonly string[] meshesExtensions = { ".fbx;", ".re" };
@@ -25,10 +27,12 @@ namespace WitcherScriptCompanion.Commands
         private string workspacePath;
         private string modMergerPath;
 
-        public override bool CanExecute(string[] args) => args.Length > 3 && args[0].Equals("--cook");
+        public override bool CanExecute(string[] args) => args.Length > 3 && args[0].Equals(Name);
 
         public override void Execute()
         {
+            SendEvent(new Event(EventType.Progress, "Cooking..."));
+
             if (HasTextures() || HasMeshes())
             {
                 Import();
@@ -52,12 +56,16 @@ namespace WitcherScriptCompanion.Commands
             }
 
             ModMerger();
+
+            SendEvent(new Event(EventType.Done));
         }
 
         public void ModMerger()
         {
             if (!string.IsNullOrEmpty(modMergerPath))
             {
+                SendEvent(new Event(EventType.Progress, "Waiting for merge scripts..."));
+
                 var process = new Process()
                 {
                     StartInfo = new ProcessStartInfo()
@@ -72,7 +80,7 @@ namespace WitcherScriptCompanion.Commands
             }
         }
 
-        public override bool OnCommandExecuting(string[] args)
+        public override bool OnExecuting(string[] args)
         {
             // wsc --cook gamePath modKitPath workspacePath modMergerPath
 
@@ -133,13 +141,9 @@ namespace WitcherScriptCompanion.Commands
                     modMergerPath = args[4];
                 }
             }
-            catch (Exception ex)
+            catch
             {
-                System.Windows.Forms.MessageBox.Show(ex.Message);
-
-                Console.Error.Write(Errors.Unexpected);
-
-                return false;
+                throw;
             }
 
             return true;
@@ -159,6 +163,8 @@ namespace WitcherScriptCompanion.Commands
 
         private void BuildCacheTexture()
         {
+            SendEvent(new Event(EventType.Progress, "Building texture cache..."));
+
             //wcc_lite buildcache textures -basedir=<dirpath>\Uncooked -platform=pc -db=<dirpath>\Cooked\cook.db -out=<dirpath>\Packed\modXXX\content\texture.cache
 
             var process = new Process()
@@ -177,6 +183,8 @@ namespace WitcherScriptCompanion.Commands
 
         private void Cook()
         {
+            SendEvent(new Event(EventType.Progress, "Cooking..."));
+
             //wcc_lite cook -platform=pc -mod=<mod_dirpath>\Uncooked -basedir=<dirpath>\Uncooked -outdir=<dirpath>\Cooked
             var process = new Process()
             {
@@ -194,6 +202,8 @@ namespace WitcherScriptCompanion.Commands
 
         private void CopyScripts()
         {
+            SendEvent(new Event(EventType.Progress, "Copying scripts..."));
+
             foreach (var scriptPath in Directory.EnumerateFiles(scriptsPath, "*.ws", SearchOption.AllDirectories))
             {
                 var newScriptPath = Path.Combine(outPath, "scripts", scriptPath.Replace(scriptsPath, "").Substring(1));
@@ -224,6 +234,8 @@ namespace WitcherScriptCompanion.Commands
         {
             var depot = witcherPackage.UseLocalDepot ? "local" : tempPath;
 
+            SendEvent(new Event(EventType.Progress, "Importing textures..."));
+
             foreach (var texturePath in Directory.EnumerateFiles(contentPath, "*.*", SearchOption.AllDirectories)
                 .Where(m => texturesExtensions.Any(k => Path.GetExtension(m) == k)))
             {
@@ -240,6 +252,8 @@ namespace WitcherScriptCompanion.Commands
                 process.Start();
                 process.WaitForExit();
             }
+
+            SendEvent(new Event(EventType.Progress, "Importing meshes..."));
 
             foreach (var meshPath in Directory.EnumerateFiles(contentPath, "*.*", SearchOption.AllDirectories)
                 .Where(m => meshesExtensions.Any(k => Path.GetExtension(m) == k)))
@@ -261,6 +275,8 @@ namespace WitcherScriptCompanion.Commands
 
         private void Metadata()
         {
+            SendEvent(new Event(EventType.Progress, "Generating metadata..."));
+
             //wcc_lite metadatastore -path=<dirpath>\Packed\modXXX\content
             var process = new Process()
             {
@@ -268,7 +284,7 @@ namespace WitcherScriptCompanion.Commands
                 {
                     WorkingDirectory = modKitPath,
                     FileName = "wcc_lite.exe",
-                    Arguments = $"metadatastore -path=\"{outPath}\""
+                    Arguments = $"metadatastore -path=\"{outPath}\"",
                 }
             };
 
@@ -278,6 +294,8 @@ namespace WitcherScriptCompanion.Commands
 
         private void Pack()
         {
+            SendEvent(new Event(EventType.Progress, "Packing files..."));
+
             //wcc_lite pack-dir=<dirpath>\Cooked -outdir=<dirpath>\Packed\modXXX\content
             var process = new Process()
             {
@@ -295,6 +313,8 @@ namespace WitcherScriptCompanion.Commands
 
         private void PackCooked()
         {
+            SendEvent(new Event(EventType.Progress, "Packing files..."));
+
             //wcc_lite pack-dir=<dirpath>\Cooked -outdir=<dirpath>\Packed\modXXX\content
             var process = new Process()
             {

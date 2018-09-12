@@ -4,15 +4,22 @@ namespace WitcherScriptCompanion
 {
     public class WitcherPackage
     {
-        [JsonProperty(PropertyName = "mod.isDLC")]
+        public WitcherPackage()
+        {
+        }
+
+        public WitcherPackage(string modName) => Name = modName;
+
+        [JsonProperty("mod.isDLC")]
         public bool IsDLC { get; set; } = false;
 
-        [JsonProperty(PropertyName = "mod.name")]
+        [JsonProperty("mod.name")]
         public string Name { get; set; }
 
-        [JsonProperty(PropertyName = "cook.useLocalDepot")]
+        [JsonProperty("cook.useLocalDepot")]
         public bool UseLocalDepot { get; set; } = false;
 
-        //public bool SkipErrors { get; set; } = false;
+        [JsonProperty("cook.skipErrors")]
+        public bool SkipErrors { get; set; } = false;
     }
 }

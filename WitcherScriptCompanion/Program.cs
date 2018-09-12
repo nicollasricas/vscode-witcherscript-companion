@@ -1,24 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
-using WitcherScriptCompanion.Commands;
+using System.Linq;
+using System.Reflection;
 
 namespace WitcherScriptCompanion
 {
     internal static class Program
     {
-        private static readonly List<Command> commands;
+        private static readonly List<Command> commands = new List<Command>();
 
         static Program()
         {
-            commands = new List<Command>()
+            foreach (var command in Assembly.GetExecutingAssembly()
+                .GetTypes()
+                .Where(m => m.IsSubclassOf(typeof(Command))))
             {
-                new ReadyCommand(),
-                new LaunchCommand(),
-                new CookCommand(),
-                //new UncookCommand(),
-                new CheckUpdateCommand(),
-                new CreateCommand()
-            };
+                commands.Add((Command)Activator.CreateInstance(command));
+            }
         }
 
         [STAThread]
