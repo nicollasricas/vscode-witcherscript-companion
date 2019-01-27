@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using WitcherScriptCompanion.Events;
 
 namespace WitcherScriptCompanion.Commands
 {
@@ -20,34 +21,25 @@ namespace WitcherScriptCompanion.Commands
 
         public override void Execute()
         {
-            SendEvent(new Event(EventType.Progress, "Uncooking..."));
+            EventManager.Send(new ProgressEvent("Uncooking..."));
 
-            var process = new Process()
-            {
-                StartInfo = new ProcessStartInfo()
-                {
-                    WorkingDirectory = modKitPath,
-                    FileName = "wcc_lite.exe",
-                    Arguments = $"uncook -indir=\"{modPath}\" -outdir=\"{uncookPath}\" -imgfmt={textureFormat}"
-                }
-            };
+            var arguments = $"uncook -indir=\"{modPath}\" -outdir=\"{uncookPath}\" -imgfmt={textureFormat}";
 
             if (dumpSWF)
             {
-                process.StartInfo.Arguments += " -dumpswf";
+                arguments += " -dumpswf";
             }
 
             if (skipErrors)
             {
-                process.StartInfo.Arguments += " -skiperrors";
+                arguments += " -skiperrors";
             }
 
-            process.Start();
-            process.WaitForExit();
+            WCC.Start(modKitPath, arguments);
 
             Process.Start("explorer.exe", uncookPath);
 
-            SendEvent(new Event(EventType.Done));
+            EventManager.Send(new DoneEvent());
         }
 
         public override bool OnExecuting(string[] args)
@@ -58,7 +50,7 @@ namespace WitcherScriptCompanion.Commands
 
             if (!Directory.Exists(modKitPath))
             {
-                SendEvent(new Event(EventType.Error, Errors.ModKitPathNotSetted));
+                EventManager.Send(new ErrorEvent(Errors.ModKitPathNotSetted));
 
                 return false;
             }

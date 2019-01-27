@@ -1,6 +1,7 @@
 ﻿using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json;
 using System.IO;
+using WitcherScriptCompanion.Events;
 
 namespace WitcherScriptCompanion.Commands
 {
@@ -21,7 +22,7 @@ namespace WitcherScriptCompanion.Commands
 
                 if (Directory.Exists(workingPath))
                 {
-                    SendEvent(new Event(EventType.Result, workingPath));
+                    EventManager.Send(new ResultEvent(workingPath));
 
                     return;
                 }
@@ -38,7 +39,7 @@ namespace WitcherScriptCompanion.Commands
 
                 File.WriteAllText(Path.Combine(workingPath, "witcher.package.json"), JsonConvert.SerializeObject(new WitcherPackage(modName), Formatting.Indented));
 
-                SendEvent(new Event(EventType.Result, workingPath));
+                EventManager.Send(new ResultEvent(workingPath));
             }
             catch
             {

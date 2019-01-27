@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using WitcherScriptCompanion.Events;
 
 namespace WitcherScriptCompanion.Commands
 {
@@ -16,7 +17,7 @@ namespace WitcherScriptCompanion.Commands
 
         public override void Execute()
         {
-            SendEvent(new Event(EventType.Progress, "Launching Game..."));
+            EventManager.Send(new ProgressEvent("Launching..."));
 
             try
             {
@@ -26,7 +27,7 @@ namespace WitcherScriptCompanion.Commands
 
                 Process.Start(gameExecutable + debugParams);
 
-                SendEvent(new Event(EventType.Done));
+                EventManager.Send(new DoneEvent());
             }
             catch (Exception)
             {
@@ -38,7 +39,7 @@ namespace WitcherScriptCompanion.Commands
         {
             if (Process.GetProcessesByName("Witcher3").Length > 0)
             {
-                SendEvent(new Event(EventType.Error, Strings.GameAlreadyRunning));
+                EventManager.Send(new ErrorEvent(Strings.GameAlreadyRunning));
 
                 return false;
             }
@@ -52,7 +53,7 @@ namespace WitcherScriptCompanion.Commands
 
             if (!File.Exists(gameExecutable))
             {
-                SendEvent(new Event(EventType.Error, Strings.GameExecutableNotFound));
+                EventManager.Send(new ErrorEvent(Strings.GameExecutableNotFound));
 
                 return false;
             }
